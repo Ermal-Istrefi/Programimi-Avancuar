@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const purchaseOrderController = require('../controllers/purchaseOrderController');
+const userController = require('../controllers/userController');
 
-// Define routes for purchase orders
-router.post('/', purchaseOrderController.createPurchaseOrder);
-router.get('/', purchaseOrderController.getAllPurchaseOrders);
-router.get('/:id', purchaseOrderController.getPurchaseOrderById);
-router.put('/:id', purchaseOrderController.updatePurchaseOrder);
-router.delete('/:id', purchaseOrderController.deletePurchaseOrder);
+router.post('/', userController.authMiddleware(['admin']), purchaseOrderController.createPurchaseOrder);
+router.get('/', userController.authMiddleware(), purchaseOrderController.getAllPurchaseOrders);
+router.get('/:id', userController.authMiddleware(), purchaseOrderController.getPurchaseOrderById);
+router.put('/:id', userController.authMiddleware(['admin']), purchaseOrderController.updatePurchaseOrder);
+router.delete('/:id', userController.authMiddleware(['admin']), purchaseOrderController.deletePurchaseOrderById);
 
 module.exports = router;

@@ -55,16 +55,15 @@ exports.updateSupply = async (req, res) => {
     }
 };
 
-// Delete a supply by ID
-exports.deleteSupply = async (req, res) => {
+// Delete supply by ID
+exports.deleteSupplyById = async (req, res) => {
     try {
-        const supply = await Supply.findById(req.params.id);
-        if (!supply) {
-            return res.status(404).json({ message: 'Supply not found' });
-        }
-        await supply.remove();
-        res.json({ message: 'Supply deleted' });
+      const supply = await Supply.findByIdAndDelete(req.params.id);
+      if (!supply) {
+        return res.status(404).json({ message: 'Supply not found' });
+      }
+      res.json({ message: 'Supply deleted' });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+      res.status(500).json({ message: err.message });
     }
-};
+  };

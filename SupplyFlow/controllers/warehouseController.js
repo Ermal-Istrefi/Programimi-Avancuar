@@ -53,16 +53,15 @@ exports.updateWarehouse = async (req, res) => {
     }
 };
 
-// Delete a warehouse by ID
-exports.deleteWarehouse = async (req, res) => {
+// Delete warehouse by ID
+exports.deleteWarehouseById = async (req, res) => {
     try {
-        const warehouse = await Warehouse.findById(req.params.id);
-        if (!warehouse) {
-            return res.status(404).json({ message: 'Warehouse not found' });
-        }
-        await warehouse.remove();
-        res.json({ message: 'Warehouse deleted' });
+      const warehouse = await Warehouse.findByIdAndDelete(req.params.id);
+      if (!warehouse) {
+        return res.status(404).json({ message: 'Warehouse not found' });
+      }
+      res.json({ message: 'Warehouse deleted' });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+      res.status(500).json({ message: err.message });
     }
-};
+  };

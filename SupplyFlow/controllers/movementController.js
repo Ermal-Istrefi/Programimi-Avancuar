@@ -55,16 +55,15 @@ exports.updateMovement = async (req, res) => {
     }
 };
 
-// Delete a movement by ID
-exports.deleteMovement = async (req, res) => {
+// Delete movement by ID
+exports.deleteMovementById = async (req, res) => {
     try {
-        const movement = await Movement.findById(req.params.id);
-        if (!movement) {
-            return res.status(404).json({ message: 'Movement not found' });
-        }
-        await movement.remove();
-        res.json({ message: 'Movement deleted' });
+      const movement = await Movement.findByIdAndDelete(req.params.id);
+      if (!movement) {
+        return res.status(404).json({ message: 'Movement not found' });
+      }
+      res.json({ message: 'Movement deleted' });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+      res.status(500).json({ message: err.message });
     }
-};
+  };
