@@ -3,9 +3,28 @@ const Supply = require('../models/supply');
 // Create a new supply
 exports.createSupply = async (req, res) => {
     try {
-        const { name, description, quantity, unitPrice, supplier } = req.body;
-        const supply = new Supply({ name, description, quantity, unitPrice, supplier });
+        const { productId, supplierId, quantity } = req.body;
+
+        // Create a new supply instance
+        const supply = new Supply({ productId, supplierId, quantity });
         await supply.save();
+
+        // Update warehouse stock
+        const warehouse = await Warehouse.findOne({}); // You should find the appropriate warehouse based on your application logic
+        if (!warehouse) {
+            throw new Error('Warehouse not found');
+        }
+
+        // Check if the product already exists in the warehouse stock
+        const existingStock = warehouse.stock.find(item => item.productId.toString() === productId.toString());
+        if (existingStock) {
+            existingStock.quantity += quantity; // Increase existing stock quantity
+        } else {
+            warehouse.stock.push({ productId, quantity }); // Add new product to warehouse stock
+        }
+
+        await warehouse.save();
+
         res.status(201).json(supply);
     } catch (err) {
         res.status(400).json({ message: err.message });

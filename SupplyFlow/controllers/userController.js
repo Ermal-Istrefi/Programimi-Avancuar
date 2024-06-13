@@ -11,7 +11,8 @@ exports.registerUser = async (req, res) => {
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        const newUser = new User({ username, email, password, role });
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = new User({ username, email, password: hashedPassword, role });
         await newUser.save();
 
         res.status(201).json({ message: 'User created successfully' });
@@ -41,6 +42,62 @@ exports.loginUser = async (req, res) => {
         res.json({ token });
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+};
+
+// Get all users
+exports.getAllUsers = async (req, res) => {
+    try {
+        const users = await User.find();
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+// Get a user by ID
+exports.getUserById = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+// Update a user
+exports.updateUser = async (req, res) => {
+    try {
+        const { username, email, role } = req.body;
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.username = username || user.username;
+        user.email = email || user.email;
+        user.role = role || user.role;
+
+        await user.save();
+        res.json(user);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+};
+
+// Delete a user
+exports.deleteUser = async (req, res) => {
+    try {
+        const user = await User.findByIdAndDelete(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json({ message: 'User deleted' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
     }
 };
 
