@@ -15,6 +15,8 @@ const movementRoutes = require('./routes/movementRoutes');
 const userRoutes = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const productInOrderRoutes = require ('./routes/productsInOrderRoutes');
+const productsInSupplyRoutes = require('./routes/productsInSupplyRoutes');
 
 // Create Express app
 const app = express();
@@ -32,6 +34,9 @@ app.use('/movements', movementRoutes);
 app.use('/users', userRoutes);
 app.use('/products', productRoutes);
 app.use('/reports', reportRoutes);
+app.use('/productInOrder', productInOrderRoutes);
+app.use('/productsInSupply', productsInSupplyRoutes);
+
 
 // MongoDB connection URI
 const PORT = process.env.PORT || 5003;

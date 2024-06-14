@@ -1,26 +1,39 @@
 const Supply = require('../models/supply');
+const Warehouse = require('../models/warehouse');
 
 // Create a new supply
 exports.createSupply = async (req, res) => {
     try {
-        const { productId, supplierId, quantity } = req.body;
+        const { supplierId, warehouseId, products } = req.body;
 
-        // Create a new supply instance
-        const supply = new Supply({ productId, supplierId, quantity });
-        await supply.save();
-
-        // Update warehouse stock
-        const warehouse = await Warehouse.findOne({}); // You should find the appropriate warehouse based on your application logic
-        if (!warehouse) {
-            throw new Error('Warehouse not found');
+        // Validate products array
+        if (!Array.isArray(products) || products.length === 0) {
+            throw new Error('Products array is required and must not be empty.');
         }
 
-        // Check if the product already exists in the warehouse stock
-        const existingStock = warehouse.stock.find(item => item.productId.toString() === productId.toString());
-        if (existingStock) {
-            existingStock.quantity += quantity; // Increase existing stock quantity
-        } else {
-            warehouse.stock.push({ productId, quantity }); // Add new product to warehouse stock
+        // Calculate total quantity for the supply
+        const totalQuantity = products.reduce((total, product) => total + product.quantity, 0);
+
+        // Create supply
+        const supply = new Supply({ supplierId, warehouseId, products, totalQuantity });
+        await supply.save();
+
+        // Update stock in warehouse
+        const warehouse = await Warehouse.findById(warehouseId);
+        if (!warehouse) {
+            throw new Error(`Warehouse with ID ${warehouseId} not found`);
+        }
+
+        for (const product of products) {
+            const { productId, quantity } = product;
+
+            // Check if product already exists in warehouse stock
+            const existingStock = warehouse.stock.find(item => item.productId.toString() === productId.toString());
+            if (existingStock) {
+                existingStock.quantity += quantity;
+            } else {
+                warehouse.stock.push({ productId, quantity });
+            }
         }
 
         await warehouse.save();
@@ -57,32 +70,89 @@ exports.getSupplyById = async (req, res) => {
 // Update a supply by ID
 exports.updateSupply = async (req, res) => {
     try {
-        const { name, description, quantity, unitPrice, supplier } = req.body;
+        const { supplierId, warehouseId, products } = req.body;
         const supply = await Supply.findById(req.params.id);
         if (!supply) {
             return res.status(404).json({ message: 'Supply not found' });
         }
-        supply.name = name;
-        supply.description = description;
-        supply.quantity = quantity;
-        supply.unitPrice = unitPrice;
-        supply.supplier = supplier;
+
+        // Remove existing products from warehouse stock
+        const warehouse = await Warehouse.findById(supply.warehouseId);
+        if (!warehouse) {
+            throw new Error(`Warehouse with ID ${supply.warehouseId} not found`);
+        }
+
+        for (const product of supply.products) {
+            const { productId, quantity } = product;
+            const existingStock = warehouse.stock.find(item => item.productId.toString() === productId.toString());
+            if (existingStock) {
+                existingStock.quantity -= quantity;
+                if (existingStock.quantity <= 0) {
+                    warehouse.stock.pull(existingStock._id);
+                }
+            }
+        }
+
+        await warehouse.save();
+
+        // Update supply with new data
+        supply.supplierId = supplierId;
+        supply.warehouseId = warehouseId;
+        supply.products = products;
+        supply.totalQuantity = products.reduce((total, product) => total + product.quantity, 0);
         await supply.save();
+
+        // Update warehouse stock with new products
+        for (const product of products) {
+            const { productId, quantity } = product;
+            const existingStock = warehouse.stock.find(item => item.productId.toString() === productId.toString());
+            if (existingStock) {
+                existingStock.quantity += quantity;
+            } else {
+                warehouse.stock.push({ productId, quantity });
+            }
+        }
+
+        await warehouse.save();
+
         res.json(supply);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
 };
 
-// Delete supply by ID
+// Delete a supply by ID
 exports.deleteSupplyById = async (req, res) => {
     try {
-      const supply = await Supply.findByIdAndDelete(req.params.id);
-      if (!supply) {
-        return res.status(404).json({ message: 'Supply not found' });
-      }
-      res.json({ message: 'Supply deleted' });
+        const supply = await Supply.findById(req.params.id);
+        if (!supply) {
+            return res.status(404).json({ message: 'Supply not found' });
+        }
+
+        // Remove products from warehouse stock
+        const warehouse = await Warehouse.findById(supply.warehouseId);
+        if (!warehouse) {
+            throw new Error(`Warehouse with ID ${supply.warehouseId} not found`);
+        }
+
+        for (const product of supply.products) {
+            const { productId, quantity } = product;
+            const existingStock = warehouse.stock.find(item => item.productId.toString() === productId.toString());
+            if (existingStock) {
+                existingStock.quantity -= quantity;
+                if (existingStock.quantity <= 0) {
+                    warehouse.stock.pull(existingStock._id);
+                }
+            }
+        }
+
+        await warehouse.save();
+
+        // Delete supply
+        await supply.remove();
+
+        res.json({ message: 'Supply deleted' });
     } catch (err) {
-      res.status(500).json({ message: err.message });
+        res.status(500).json({ message: err.message });
     }
-  };
+};

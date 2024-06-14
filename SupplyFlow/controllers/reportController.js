@@ -4,7 +4,12 @@ const Movement = require('../models/movement');
 
 exports.getStockReport = async (req, res) => {
     try {
-        const supplies = await Supply.find().populate('productId').populate('warehouseId');
+        const { warehouseId } = req.params;
+
+        const query = warehouseId ? { warehouseId } : {}; 
+
+        const supplies = await Supply.find(query).populate('products.productId').populate('warehouseId');
+        
         res.json(supplies);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -13,7 +18,12 @@ exports.getStockReport = async (req, res) => {
 
 exports.getTransferReport = async (req, res) => {
     try {
-        const movements = await Movement.find().populate('productId').populate('fromWarehouse').populate('toWarehouse');
+
+        const { warehouseId } = req.params;
+        const query = warehouseId ? { $or: [{ fromWarehouse: warehouseId }, { toWarehouse: warehouseId }] } : {}; 
+
+        const movements = await Movement.find(query).populate('productId').populate('fromWarehouse').populate('toWarehouse');
+        
         res.json(movements);
     } catch (err) {
         res.status(500).json({ message: err.message });

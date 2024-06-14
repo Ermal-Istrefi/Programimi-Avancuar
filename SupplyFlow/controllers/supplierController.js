@@ -3,8 +3,8 @@ const Supplier = require('../models/supplier');
 // Create a new supplier
 exports.createSupplier = async (req, res) => {
     try {
-        const { name, contactInfo, address } = req.body;
-        const supplier = new Supplier({ name, contactInfo, address });
+        const { name, contactInfo, email, phone, address } = req.body; // Include email and phone
+        const supplier = new Supplier({ name, contactInfo, email, phone, address }); // Pass all required fields
         await supplier.save();
         res.status(201).json(supplier);
     } catch (err) {
@@ -38,13 +38,15 @@ exports.getSupplierById = async (req, res) => {
 // Update a supplier by ID
 exports.updateSupplier = async (req, res) => {
     try {
-        const { name, contactInfo, address } = req.body;
+        const { name, contactInfo, email, phone, address } = req.body; // Include email and phone
         const supplier = await Supplier.findById(req.params.id);
         if (!supplier) {
             return res.status(404).json({ message: 'Supplier not found' });
         }
         supplier.name = name;
         supplier.contactInfo = contactInfo;
+        supplier.email = email; 
+        supplier.phone = phone; 
         supplier.address = address;
         await supplier.save();
         res.json(supplier);
