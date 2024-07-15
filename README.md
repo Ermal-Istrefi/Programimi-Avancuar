@@ -31,3 +31,8 @@ Node.js
 Express.js
 MongoDB (with Mongoose ODM)
 JWT (JSON Web Tokens) for authentication
+
+Installation:
+You can install it by using git clone or directly downloading foler from here.
+When opening it in VS Code, do not forget to navigate in "SupplyFlow" folder and then install
+depedencies using npm install(windows) or yarn install(MAC).
