@@ -40,7 +40,7 @@ app.use('/productsInSupply', productsInSupplyRoutes);
 
 // MongoDB connection URI
 const PORT = process.env.PORT || 5003;
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/SupplyFlow";
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://ermalistrefi:as388AaK8cDfwvnf@cluster0.ue5cylh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,

@@ -11,8 +11,7 @@ exports.registerUser = async (req, res) => {
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ username, email, password: hashedPassword, role });
+        const newUser = new User({ username, email, password, role });
         await newUser.save();
 
         res.status(201).json({ message: 'User created successfully' });
@@ -27,12 +26,21 @@ exports.loginUser = async (req, res) => {
     try {
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+            console.log('User not found for email:', email);
+            return res.status(400).json({ message: 'Invalid email' });
         }
 
+        console.log('User found:', user);
+
+        console.log('Login Password:', password);
+        console.log('Stored Hashed Password:', user.password);
+
+        // Direct comparison between stored hashed password and login password
         const isMatch = await bcrypt.compare(password, user.password);
+        console.log('Password match:', isMatch);
+
         if (!isMatch) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+            return res.status(400).json({ message: 'Invalid password' });
         }
 
         const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, {
@@ -41,9 +49,13 @@ exports.loginUser = async (req, res) => {
 
         res.json({ token });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.log('Login Error:', error.message);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
+
+
+
 
 // Get all users
 exports.getAllUsers = async (req, res) => {
